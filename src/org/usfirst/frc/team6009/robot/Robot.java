@@ -11,8 +11,8 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 //This is where all the libraries will get imported
 	import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Victor;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -42,14 +42,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 	SendableChooser chooser;
 	
 	DigitalOutput light;
-	Victor leftFront, leftBack, rightFront, rightBack, hopper, climber, launcher;
+	SpeedController leftFront, leftBack, rightFront, rightBack, hopper, climber, launcher;
 	Encoder leftEncoder, rightEncoder;
 	
 	//Spark launcher;
 	Joystick driver;
 	//Joystick operator;
 	RobotDrive chassis;
-	Gyro gyroscope;
+	
+	// FIXME: declare the variable using the full name of the gyro class.
+	ADXRS450_Gyro gyroscope;
 	CameraServer server;
 	//VisionThread visionThread;
 	
@@ -71,11 +73,21 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 	double width = 0; 
 	double area = 0;
 	double height = 0;
+	
+	// Auto Variables
+    public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE, HANG, DONE };
+    public Step autoStep = Step.STRAIGHT;
+    public long timerStart;
+
+
+	/**
+	 * Called once when the robot is intialized
+	 * 
+	 * Setup the chassis,motors, etc
+	 */
+	@Override
     public void robotInit() {
-		// Called when the Robot is initialized
-		// Setup the chassis,motors, etc
     	//light.set(true);
-    	
     	
     	chooser = new SendableChooser();
         chooser.addDefault("Right Peg", rightpeg);
@@ -141,18 +153,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
     
 	
 	/**
-	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
-	 * using the dashboard. The sendable chooser code works with the Java SmartDashboard. If you prefer the LabVIEW
-	 * Dashboard, remove all of the chooser code and uncomment the getString line to get the auto name from the text box
-	 * below the Gyro
-	 *
-	 * You can add additional auto modes by adding additional comparisons to the switch structure below with additional strings.
-	 * If using the SendableChooser make sure to add them to the chooser code above as well.
+	 * Initialize the Autonomous.  
+	 * 
+	 * This code runs once at the beginning of autonomous.
 	 */
-    
-    	
-    
-	 
+	@Override
     public void autonomousInit() {
 	
 		// Initializes autonomous mode
@@ -165,30 +170,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
         
         leftEncoder.reset();
         rightEncoder.reset();
-        step = Step.STRAIGHT;
+        autoStep = Step.STRAIGHT;
         
     }
 
     /**
-     * This function is called periodically during autonomous
+     * This function is called periodically (~20ms) during autonomous
      */
-    
-    
-
-    public double getDistance() {
-    	return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
-    }
-    
-    public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE, HANG, DONE };
-    public Step step = Step.STRAIGHT;
-    public long timerStart;
-    
-    public void disabledPeriodic() {
-    	
-		updateSmartDashboard();
-
-    }
-    
+    @Override
     public void autonomousPeriodic() {
     	
 		updateSmartDashboard();
@@ -198,7 +187,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
     		// Calculate the distance since the last reset of the encoders
     		double distance = getDistance();
     		
-    		switch (step) {
+    		switch (autoStep) {
     		case STRAIGHT:
 				leftBack.set(0.6);
 				leftFront.set(0.6);
@@ -211,13 +200,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 					leftBack.set(0);
 					leftFront.set(0);
 					timerStart = System.currentTimeMillis();
-					step = Step.STRAIGHT_PAUSE;
+					autoStep = Step.STRAIGHT_PAUSE;
 				}
     			break;
 
     		case STRAIGHT_PAUSE:
     			if ((System.currentTimeMillis() - timerStart) > 500) {
-    				step = Step.TURN;
+    				autoStep = Step.TURN;
     			}
     			break;
     			
@@ -233,13 +222,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 					rightBack.set(0);
 					rightFront.set(0);
 					timerStart = System.currentTimeMillis();
-					step = Step.TURN_PAUSE;
+					autoStep = Step.TURN_PAUSE;
 				}
     			break;
     			
     		case TURN_PAUSE:
     			if ((System.currentTimeMillis() - timerStart) > 500) {
-    				step = Step.HANG;
+    				autoStep = Step.HANG;
     			}
     			break;
 
@@ -254,7 +243,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 					leftFront.set(0);
 					rightBack.set(0);
 					rightFront.set(0);
-					step = Step.DONE;
+					autoStep = Step.DONE;
 				}
     			break;
     			
@@ -264,7 +253,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
     		
     		return;
     	}
+		
+		// If not the altLeftPeg or altRightPeg, then keep the code the same as before.
     	
+		// TODO:  remove this loop - the autonomousPeriodic routine gets called every 20ms
     	while (isAutonomous()) {
 		// This is where the autonomous code goes. Setup switch cases to choose between the modes using smartdashboard
     
@@ -418,15 +410,23 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
             
     	}
     	
+    /**
+     * This function is called periodically (~20ms) when the robot is disabled
+     */
+    @Override
+    public void disabledPeriodic() {
+		updateSmartDashboard();
+    }
     
             
     /**
      * This function is called periodically during operator control
      */
-    
-    
+    @Override
     public void teleopPeriodic() {
     	
+    	// TODO:  remove this while loop
+    	// The teleopPeriodic routine is called every ~20ms
     	while (isOperatorControl() && isEnabled()){
 
     		updateSmartDashboard();
@@ -453,11 +453,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
     		
     		double[] defaultValue = new double[0];
     		double[] centerX = table.getNumberArray("centerX",defaultValue );
-    		SmartDashboard.putNumber("gyro", gyroscope.getAngle());
-    		// SmartDashboard.putNumber("Center X: ", centerX);
-    		
-    		
-
         	
     		selectButton = driver.getRawButton(7);
         	startButton = driver.getRawButton(8);
@@ -484,6 +479,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
             	light.set(false);
             }
         	
+    		// TODO: Does this code work?
+    		//       Seems like it will turn when you are holding the button
+    		//       and stop turning when the button is released?
             if (xButton == true) {
             	gyroscope.reset();
             	angle = gyroscope.getAngle() + 90.0;
@@ -511,15 +509,26 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
     }
         
     
-    
     /**
      * This function is called periodically during test mode
      */
     public void testPeriodic() {
-    
+    	updateSmartDashboard();
     }
     
-    public void updateSmartDashboard() {
+    
+    private double getDistance() {
+    	return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
+    }
+    
+
+    private void updateSmartDashboard() {
+    	
+    	// TODO: add the gyro to the smartdashboard update
+    	SmartDashboard.putData("Gyro", gyroscope);
+		SmartDashboard.putNumber("Gyro Angle", gyroscope.getAngle());
+		SmartDashboard.putNumber("Gyro Rate", gyroscope.getRate());
+
     	SmartDashboard.putNumber("Left Encoder Distance", leftEncoder.get());
     	SmartDashboard.putNumber("Right Encoder Distance", rightEncoder.get());
     	SmartDashboard.putNumber("Encoder Distance", getDistance());
