@@ -44,13 +44,12 @@ public class Robot extends IterativeRobot{
 	DigitalOutput light;
 	SpeedController leftFront, leftBack, rightFront, rightBack, hopper, climber, launcher;
 	Encoder leftEncoder, rightEncoder;
-
-	//Spark launcher;
+	
 	Joystick driver;
 	//Joystick operator;
 	RobotDrive chassis;
 
-	// FIXME: declare the variable using the full name of the gyro class.
+	// FIXME: declare the variable using the full name of the gyro class. - FIXED
 	ADXRS450_Gyro gyroscope;
 	CameraServer server;
 	//VisionThread visionThread;
@@ -165,8 +164,10 @@ public class Robot extends IterativeRobot{
 		leftEncoder.reset();
 		rightEncoder.reset();
 		autoStep = Step.STRAIGHT;
-
-		// reset the gyr FIXME:
+		gyroscope.reset();  // Reset the gyro so current heading is always 0
+		
+		// reset the gyr FIXME:  - FIXED
+		
 	}
 
 	/**
@@ -200,8 +201,9 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case TURN:
-				if (autoSelected = altRightPeg)
-				turnRight();
+				if (autoSelected == altRightPeg){
+					turnRight();
+				}
 
 				// Check the gyro angle and stop short because overshoot
 				if (distance > 35.0) {
@@ -241,157 +243,134 @@ public class Robot extends IterativeRobot{
 
 		// If not the altLeftPeg or altRightPeg, then keep the code the same as before.
 
-		// TODO:  remove this loop - the autonomousPeriodic routine gets called every 20ms
-		while (isAutonomous()) {
-			
-			// This is where the autonomous code goes. Setup switch cases to choose between the modes using smartdashboard
+		// TODO:  remove this loop - the autonomousPeriodic routine gets called every 20ms - FIXED
 
-			double centerX = 0;
-			double centerY = 0;
-			double width = 0; 
-			double area = 0;
-			double height = 0;
+		// This is where the autonomous code goes. Setup switch cases to choose between the modes using smartdashboard
 
-			table.putNumber("CenterX", centerX);
-			table.putNumber("CenterY", centerY);
-			table.putNumber("Width", width);
-			table.putNumber("Area", area);
-			table.putNumber("Height", height);
+		double centerX = 0;
+		double centerY = 0;
+		double width = 0; 
+		double area = 0;
+		double height = 0;
 
-
-			switch(autoSelected){
-
-			case leftpeg: //drive straight
-				if (autoLoopCounter < 45000){
-					leftBack.set(0.8);
-					rightBack.set(-0.8);
-					//climber.set(-1.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 50000){
-					leftBack.set(0.0);
-					rightBack.set(0.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 77000){
-					leftBack.set(-0.8);
-					rightBack.set(0.8);
-					autoLoopCounter++;
-				}
-				else{
-					leftBack.set(0.0);
-					rightBack.set(0.0);
-				} break;
-			case rightpeg:
-				if (autoLoopCounter < 45000){
-					leftBack.set(0.8);
-					rightFront.set(-0.8);
-					//climber.set(-1.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 50000){
-					leftBack.set(0.0);
-					rightFront.set(0.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 77000){
-					leftBack.set(-0.8);
-					rightFront.set(0.8);
-					autoLoopCounter++;
-				}
-				else{
-					leftBack.set(0.0);
-					rightFront.set(0.0);
-
-				}
-				break;
-			case centerpeg:
-				if (autoLoopCounter < 22000){
-					leftBack.set(0.4);
-					rightFront.set(-0.4);
-					//climber.set(-1.0);
-					autoLoopCounter++;
-				}
-				/*else if (autoLoopCounter < 80000){
-    				leftBack.set(0.0);
-    				rightFront.set(0.0);
-    				autoLoopCounter++;
-    			}
-    			else if (autoLoopCounter < 107000){
-    				leftBack.set(-0.4);
-    				rightFront.set(0.4);
-    				autoLoopCounter++;
-    			}*/
-				else{
-					leftBack.set(0.0);
-					rightFront.set(0.0);
-
-				}
-				break;
-			case followtape:
-				break;
-
-			case DriveStraight:
-				if (autoLoopCounter < 45000){
-					leftBack.set(0.8);
-					rightBack.set(-0.8);
-					//climber.set(-1.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 50000){
-					leftBack.set(0.0);
-					rightBack.set(0.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 77000){
-					leftBack.set(-0.8);
-					rightBack.set(0.8);
-					autoLoopCounter++;
-				}
-				else{
-					leftBack.set(0.0);
-					rightBack.set(0.0);
-				}
-				break;
-			case vision:
-				if (autoLoopCounter < 45000){
-					leftBack.set(0.8);
-					rightBack.set(-0.8);
-					//climber.set(-1.0);
-					autoLoopCounter++;
-				}
-				else if (autoLoopCounter < 45001){
-					leftBack.set(0.0);
-					rightBack.set(0.0);
-				}
-
-				/*
-    			 if (autoLoopCounter < 200){
-    			 	leftBack.set(-0.5);
-    			 	rightBack.set(-0.5);
-    			 	autoLoopCounter++;
-    			 }
-    			 else if (autoLoopCounter < 300){
-    			 	leftBack.set(-0.5);
-    			 	rightBack.set(-1.0);
-    			 	autoLoopCounter++;
-    			 }
-    			 else if (autoLoopCounter <= 500){
-    			 	leftBack.set(-0.3);
-    			 	rightBack.set(-0.3);
-    			 	autoLoopCounter++;
-    			 }
-    			 else {
-    			 	leftBack.set(0.0);
-    			 	rightBack.set(0.0);
-    			 }
-				 */
-				break;
+		table.putNumber("CenterX", centerX);
+		table.putNumber("CenterY", centerY);
+		table.putNumber("Width", width);
+		table.putNumber("Area", area);
+		table.putNumber("Height", height);
 
 
+		switch(autoSelected){
+
+		case leftpeg: //drive straight
+			if (autoLoopCounter < 45000){
+				leftBack.set(0.8);
+				rightBack.set(-0.8);
+				//climber.set(-1.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 50000){
+				leftBack.set(0.0);
+				rightBack.set(0.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 77000){
+				leftBack.set(-0.8);
+				rightBack.set(0.8);
+				autoLoopCounter++;
+			}
+			else{
+				leftBack.set(0.0);
+				rightBack.set(0.0);
+			} break;
+		case rightpeg:
+			if (autoLoopCounter < 45000){
+				leftBack.set(0.8);
+				rightFront.set(-0.8);
+				//climber.set(-1.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 50000){
+				leftBack.set(0.0);
+				rightFront.set(0.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 77000){
+				leftBack.set(-0.8);
+				rightFront.set(0.8);
+				autoLoopCounter++;
+			}
+			else{
+				leftBack.set(0.0);
+				rightFront.set(0.0);
 
 			}
+			break;
+		case centerpeg:
+			if (autoLoopCounter < 22000){
+				leftBack.set(0.4);
+				rightFront.set(-0.4);
+				//climber.set(-1.0);
+				autoLoopCounter++;
+			}
+			/*else if (autoLoopCounter < 80000){
+				leftBack.set(0.0);
+				rightFront.set(0.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 107000){
+				leftBack.set(-0.4);
+				rightFront.set(0.4);
+				autoLoopCounter++;
+			}*/
+			else{
+				leftBack.set(0.0);
+				rightFront.set(0.0);
+
+			}
+			break;
+		case followtape:
+			break;
+
+		case DriveStraight:
+			if (autoLoopCounter < 45000){
+				leftBack.set(0.8);
+				rightBack.set(-0.8);
+				//climber.set(-1.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 50000){
+				leftBack.set(0.0);
+				rightBack.set(0.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 77000){
+				leftBack.set(-0.8);
+				rightBack.set(0.8);
+				autoLoopCounter++;
+			}
+			else{
+				leftBack.set(0.0);
+				rightBack.set(0.0);
+			}
+			break;
+		case vision:
+			if (autoLoopCounter < 45000){
+				leftBack.set(0.8);
+				rightBack.set(-0.8);
+				//climber.set(-1.0);
+				autoLoopCounter++;
+			}
+			else if (autoLoopCounter < 45001){
+				leftBack.set(0.0);
+				rightBack.set(0.0);
+			}
+			break;
+
+
+
 		}
+		
 
 	}
 
@@ -410,88 +389,74 @@ public class Robot extends IterativeRobot{
 	@Override
 	public void teleopPeriodic() {
 
-		// TODO:  remove this while loop
+		// TODO:  remove this while loop - FIXED
 		// The teleopPeriodic routine is called every ~20ms
-		while (isOperatorControl() && isEnabled()){
 
-			updateSmartDashboard();
+		updateSmartDashboard();
 
-			aButton = driver.getRawButton(1);
-			bButton = driver.getRawButton(2);
-			xButton = driver.getRawButton(3);
-			yButton = driver.getRawButton(4);
-			lbumperButton = driver.getRawButton(5);
-			rbumperButton = driver.getRawButton(6);
+		aButton = driver.getRawButton(1);
+		bButton = driver.getRawButton(2);
+		xButton = driver.getRawButton(3);
+		yButton = driver.getRawButton(4);
+		lbumperButton = driver.getRawButton(5);
+		rbumperButton = driver.getRawButton(6);
 
-			table.putNumber("CenterX", centerX);
-			table.putNumber("CenterY", centerY);
-			table.putNumber("Width", width);
-			table.putNumber("Area", area);
-			table.putNumber("Height", height);
-			table.putNumber("x_value", x);
+		table.putNumber("CenterX", centerX);
+		table.putNumber("CenterY", centerY);
+		table.putNumber("Width", width);
+		table.putNumber("Area", area);
+		table.putNumber("Height", height);
+		table.putNumber("x_value", x);
 
-			// Loop that is called while teleop is running
-			// Use this to setup drive style (Ex. Tank/Arcade/etc)
-			// Use this to map button inputs to motors, etc
+		// Loop that is called while teleop is running
+		// Use this to setup drive style (Ex. Tank/Arcade/etc)
+		// Use this to map button inputs to motors, etc
 
-			chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
+		chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
 
-			double[] defaultValue = new double[0];
-			double[] centerX = table.getNumberArray("centerX",defaultValue );
+		//double[] defaultValue = new double[0];
+		//double[] centerX = table.getNumberArray("centerX",defaultValue );
 
-			selectButton = driver.getRawButton(7);
-			startButton = driver.getRawButton(8);
-			if (selectButton == true){
-				x = 0;
-			}
-			else if (startButton == true){
-				x = 1;
-			}
-
-			if (x == 0){
-				chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
-			}
-			else if (x == 1){
-				//Backwards Driving
-				chassis.arcadeDrive(driver.getRawAxis(5), (-driver.getRawAxis(5)));
-				// TODO: create rawaxis variables and change X axis to proper value
-			}
-
-
-			if (aButton == true){
-				light.set(true);
-			}
-			else if (bButton == true) {
-				light.set(false);
-			}
-
-			// TODO: Does this code work?
-			//       Seems like it will turn when you are holding the button
-			//       and stop turning when the button is released?
-			if (xButton == true) {
-				gyroscope.reset();
-				angle = gyroscope.getAngle() + 90.0;
-				chassis.arcadeDrive(0.05, angle*kP);
-			} 
-			else if (yButton == true) {
-				gyroscope.reset();
-				angle = gyroscope.getAngle() + 15.0;
-				chassis.arcadeDrive(0.05, angle*kP);
-			}
-			
-			if (lbumperButton == true){
-				launcher.set(1.0);
-			}
-			else if (rbumperButton == true){
-				climber.set(-1.0);
-				//Timer.delay(0.5);
-			}
-			else {
-				climber.set(0.0);
-				launcher.set(0.0);
-			}
-
+		selectButton = driver.getRawButton(7);
+		startButton = driver.getRawButton(8);
+		
+		if (selectButton == true){
+			x = 0;
 		}
+		else if (startButton == true){
+			x = 1;
+		}
+
+		if (x == 0){
+			chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
+			// This is A good program		
+			}
+		else if (x == 1){
+			//Backwards Driving
+			chassis.arcadeDrive(driver.getRawAxis(5), (-driver.getRawAxis(4)));
+			// TODO: create rawaxis variables and change X axis to proper value
+		}
+
+
+		if (aButton == true){
+			light.set(true);
+		}
+		else if (bButton == true) {
+			light.set(false);
+		}
+		if (lbumperButton == true){
+			launcher.set(1.0);
+		}
+		else if (rbumperButton == true){
+			climber.set(-1.0);
+			//Timer.delay(0.5);
+		}
+		else {
+			climber.set(0.0);
+			launcher.set(0.0);
+		}
+
+		
 
 	}
 
@@ -506,31 +471,49 @@ public class Robot extends IterativeRobot{
 
 	private void driveStraight(double heading, double speed) {
 
-//		leftBack.set(0.6);
-//		leftFront.set(0.6);
-//		rightBack.set(-0.6);
-//		rightFront.set(-0.6);
-
+		//		leftBack.set(0.6);
+		//		leftFront.set(0.6);
+		//		rightBack.set(-0.6);
+		//		rightFront.set(-0.6);
 		// get the current heading and calculate a heading error
+		double currentAngle = gyroscope.getAngle();
 		double error = heading - currentAngle;
-		
+
 		// calculate the speed for the motors
 		double leftSpeed = speed;
 		double rightSpeed = speed;
-		
+
 		// adjust the motor speed based on the compass error
 		if (error < 0) {
 			// turn left
 			// slow down the left motor
 			leftSpeed -= error * k;
 		}
+		else if (error > 0){
+			
+		}
 		else {
 			// turn right
 		}
-		
+
 		// set the motors based on the speeds
 	}
-	
+	// TODO: Create stop function - FIXED
+	private void stop(){
+		leftBack.set(0);
+		leftFront.set(0);
+		rightBack.set(0);
+		rightFront.set(0);
+	}
+	// TODO: Create TurnRight and TurnLeft Functions
+	private void turnRight(){
+		//TODO: Populate function with drive speed values
+		// We want to turn in place to 60 degrees 
+	}
+	private void turnLeft(){
+		// We want to turn in place -60 degrees
+	}
+
 	private double getDistance() {
 		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
 	}
@@ -538,7 +521,7 @@ public class Robot extends IterativeRobot{
 
 	private void updateSmartDashboard() {
 
-		// TODO: add the gyro to the smartdashboard update
+		// TODO: add the gyro to the smartdashboard update - FIXED
 		SmartDashboard.putData("Gyro", gyroscope);
 		SmartDashboard.putNumber("Gyro Angle", gyroscope.getAngle());
 		SmartDashboard.putNumber("Gyro Rate", gyroscope.getRate());
