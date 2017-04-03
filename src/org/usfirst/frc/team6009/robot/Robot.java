@@ -116,7 +116,7 @@ public class Robot extends IterativeRobot{
 		driver = new Joystick (0);
 
 		//operator = new Joystick(1);
-		light = new DigitalOutput(0);
+		light = new DigitalOutput(5);
 
 		CameraServer.getInstance().startAutomaticCapture();
 		//server.startAutomaticCapture("cam0");
@@ -179,14 +179,13 @@ public class Robot extends IterativeRobot{
 
 			// Calculate the distance since the last reset of the encoders
 			double distance = getDistance();
-			// TODO: Populate cases with drivestraight functions and speed
 			switch (autoStep) {
 			case STRAIGHT:
 				// call driveStraight(heading, speed)
 				driveStraight(0, .6);
 				
 				// Check distance in inches
-				if (distance > 135.0) {
+				if (distance > 65.25) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -232,7 +231,7 @@ public class Robot extends IterativeRobot{
 			case HANG:
 				driveStraight(0, .6);
 
-				if (distance > 35.0) {
+				if (distance > 77.77) {
 					stop();
 					autoStep = Step.DONE;
 				}
@@ -381,7 +380,6 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void disabledPeriodic() {
-		
 		updateSmartDashboard();
 	}
 	
@@ -390,10 +388,13 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void teleopPeriodic() {
-
 		// The teleopPeriodic routine is called every ~20ms
+		
+		// Reset the encoders at the start of teleop
+		// only here for testing purposes as a way to reset the encoder count
 		leftEncoder.reset();
 		rightEncoder.reset();
+		
 		updateSmartDashboard();
 
 		aButton = driver.getRawButton(1);
@@ -414,10 +415,8 @@ public class Robot extends IterativeRobot{
 		// Use this to setup drive style (Ex. Tank/Arcade/etc)
 		// Use this to map button inputs to motors, etc
 
-		chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
-
-		//double[] defaultValue = new double[0];
-		//double[] centerX = table.getNumberArray("centerX",defaultValue );
+		
+		//chassis.arcadeDrive((-driver.getY()), (-driver.getX()));		
 
 		selectButton = driver.getRawButton(7);
 		startButton = driver.getRawButton(8);
@@ -430,13 +429,12 @@ public class Robot extends IterativeRobot{
 		}
 
 		if (x == 0){
+			//Forwards Driving
 			chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
-			// This is A good program		
 			}
 		else if (x == 1){
 			//Backwards Driving
 			chassis.arcadeDrive(driver.getRawAxis(5), (-driver.getRawAxis(4)));
-			// TODO: create rawaxis variables and change X axis to proper value
 		}
 
 
@@ -446,6 +444,7 @@ public class Robot extends IterativeRobot{
 		else if (bButton == true) {
 			light.set(false);
 		}
+		
 		if (lbumperButton == true){
 			launcher.set(1.0);
 		}
@@ -505,9 +504,8 @@ public class Robot extends IterativeRobot{
 		rightBack.set(0);
 		rightFront.set(0);
 	}
-	// TODO: Create TurnRight and TurnLeft Functions - FIXED
+	
 	private void turnRight(){
-		//TODO: Populate function with drive speed values - FIXED
 		// We want to turn in place to 60 degrees 
 		double currentAngle = gyroscope.getAngle();
 		if (currentAngle <= 55.75){
