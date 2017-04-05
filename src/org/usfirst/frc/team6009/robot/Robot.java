@@ -116,7 +116,7 @@ public class Robot extends IterativeRobot{
 		driver = new Joystick (0);
 
 		//operator = new Joystick(1);
-		light = new DigitalOutput(5);
+		light = new DigitalOutput(4);
 
 		CameraServer.getInstance().startAutomaticCapture();
 		//server.startAutomaticCapture("cam0");
@@ -129,7 +129,7 @@ public class Robot extends IterativeRobot{
 		table = NetworkTable.getTable("GRIP/myContoursReport"); // rename - GRIP/myContoursReport 
 
 
-		double centerX = 0;
+		//double centerX = 0;
 		double centerY = 0;
 		double width = 0; 
 		double area = 0;
@@ -141,6 +141,8 @@ public class Robot extends IterativeRobot{
 		table.putNumber("Width", width);
 		table.putNumber("Area", area);
 		table.putNumber("Height", height);
+		
+		//double centerX = table.getNumber("centerX", 160);
 	}
 
 
