@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot{
 
-	final static double ENCODER_COUNTS_PER_INCH = 1.0;
+	final static double ENCODER_COUNTS_PER_INCH = 13.1;
 
 	// Define Joysticks, Victors, Limit switches, Etc
 	final String rightpeg = "Right Peg";
@@ -105,6 +105,10 @@ public class Robot extends IterativeRobot{
 		rightFront = new Victor (2);
 		rightBack = new Victor (3);
 
+		// The right side motors are inverted
+		rightFront.setInverted(true);
+		rightBack.setInverted(true);
+		
 		leftEncoder = new Encoder(0, 1);
 		rightEncoder = new Encoder(2, 3);
 
@@ -184,27 +188,29 @@ public class Robot extends IterativeRobot{
 			switch (autoStep) {
 			case STRAIGHT:
 				// call driveStraight(heading, speed)
-				driveStraight(0, .6);
+				driveStraight(0, .4);
 				
 				// Check distance in inches
-				if (distance > 65.25) {
+				if (distance > 68.5) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
 				}
 				break;
-
+// TODO: Fix the turning commands for the right peg
 			case STRAIGHT_PAUSE:
 				if ((System.currentTimeMillis() - timerStart) > 500) {
 					autoStep = Step.TURN;
 				}
+				System.out.println(autoStep);
 				break;
 
 			case TURN:
-				if (autoSelected == altRightPeg){
-					turnRight();
-					timerStart = System.currentTimeMillis();
-					autoStep = Step.TURN_PAUSE;
+				if (autoSelected == altLeftPeg){
+					if (turnRight(60)) {
+						timerStart = System.currentTimeMillis();
+						autoStep = Step.TURN_PAUSE;
+					}
 				}
 				else{
 					turnLeft();
@@ -227,13 +233,18 @@ public class Robot extends IterativeRobot{
 			case TURN_PAUSE:
 				if ((System.currentTimeMillis() - timerStart) > 500) {
 					autoStep = Step.HANG;
+					resetEncoders();
 				}
 				break;
 
 			case HANG:
-				driveStraight(0, .6);
+				if (autoSelected == altRightPeg) {
+					driveStraight(-60, .4);
+				} else {
+					driveStraight(60, .4);
+				}
 
-				if (distance > 77.77) {
+				if (distance > 81) {
 					stop();
 					autoStep = Step.DONE;
 				}
@@ -289,7 +300,7 @@ public class Robot extends IterativeRobot{
 		case rightpeg:
 			if (autoLoopCounter < 45000){
 				leftBack.set(0.8);
-				rightFront.set(-0.8);
+				rightFront.set(0.8);
 				//climber.set(-1.0);
 				autoLoopCounter++;
 			}
@@ -299,7 +310,7 @@ public class Robot extends IterativeRobot{
 				autoLoopCounter++;
 			}
 			else if (autoLoopCounter < 77000){
-				leftBack.set(-0.8);
+				leftBack.set(0.8);
 				rightFront.set(0.8);
 				autoLoopCounter++;
 			}
@@ -312,7 +323,7 @@ public class Robot extends IterativeRobot{
 		case centerpeg:
 			if (autoLoopCounter < 22000){
 				leftBack.set(0.4);
-				rightFront.set(-0.4);
+				rightFront.set(0.4);
 				//climber.set(-1.0);
 				autoLoopCounter++;
 			}
@@ -358,17 +369,13 @@ public class Robot extends IterativeRobot{
 			}
 			break;
 		case vision:
-			if (autoLoopCounter < 45000){
-				leftBack.set(0.8);
-				rightBack.set(-0.8);
-				//climber.set(-1.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 45001){
-				leftBack.set(0.0);
-				rightBack.set(0.0);
+			double distance = getDistance();
+			driveStraight(0, 0.3);
+			if (distance > 100.0 ){
+				stop();
 			}
 			break;
+			
 
 
 
@@ -385,17 +392,23 @@ public class Robot extends IterativeRobot{
 		updateSmartDashboard();
 	}
 	
+	private void resetEncoders() {
+		leftEncoder.reset();
+		rightEncoder.reset();
+	}
 	/**
 	 * This function is called periodically during operator control
 	 */
 	@Override
+	public void teleopInit(){
+		leftEncoder.reset();
+		rightEncoder.reset();
+	}
 	public void teleopPeriodic() {
 		// The teleopPeriodic routine is called every ~20ms
 		
 		// Reset the encoders at the start of teleop
 		// only here for testing purposes as a way to reset the encoder count
-		leftEncoder.reset();
-		rightEncoder.reset();
 		
 		updateSmartDashboard();
 
@@ -432,11 +445,11 @@ public class Robot extends IterativeRobot{
 
 		if (x == 0){
 			//Forwards Driving
-			chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
+			chassis.arcadeDrive((driver.getX()), (driver.getY()));
 			}
 		else if (x == 1){
 			//Backwards Driving
-			chassis.arcadeDrive(driver.getRawAxis(5), (-driver.getRawAxis(4)));
+			chassis.arcadeDrive(driver.getRawAxis(4), -(driver.getRawAxis(5)));
 		}
 
 
@@ -475,7 +488,8 @@ public class Robot extends IterativeRobot{
 	private void driveStraight(double heading, double speed) {
 		
 		// get the current heading and calculate a heading error
-		double currentAngle = gyroscope.getAngle();
+		double currentAngle = gyroscope.getAngle()%360.0;
+		
 		double error = heading - currentAngle;
 
 		// calculate the speed for the motors
@@ -486,7 +500,7 @@ public class Robot extends IterativeRobot{
 		if (error < 0) {
 			// turn left
 			// slow down the left motors
-			leftSpeed -= error * kP;
+			leftSpeed += error * kP;
 		}
 		else {
 			// turn right
@@ -497,8 +511,8 @@ public class Robot extends IterativeRobot{
 		// set the motors based on the inputted speed
 		leftBack.set(leftSpeed);
 		leftFront.set(leftSpeed);
-		rightBack.set(-(rightSpeed));
-		rightFront.set(-(rightSpeed));
+		rightBack.set(rightSpeed);
+		rightFront.set(rightSpeed);
 	}
 	private void stop(){
 		leftBack.set(0);
@@ -507,28 +521,28 @@ public class Robot extends IterativeRobot{
 		rightFront.set(0);
 	}
 	
-	private void turnRight(){
+	private boolean turnRight(double targetAngle){
 		// We want to turn in place to 60 degrees 
+		leftBack.set(0.05);
+		leftFront.set(0.05);
+		rightBack.set(-0.05);
+		rightFront.set(-0.05);
+
 		double currentAngle = gyroscope.getAngle();
-		if (currentAngle <= 55.75){
-			leftBack.set(0.25);
-			leftFront.set(0.25);
-			rightBack.set(0.25);
-			rightFront.set(0.25);
+		if (currentAngle <= targetAngle - 5){
+			return true;
 		}
-		else{
-			stop();
-		}
+		return false;
 	}
 	private void turnLeft(){
 		// We want to turn in place -60 degrees
 		double currentAngle = gyroscope.getAngle();
 		if (currentAngle >= -55.75){
 			//Turn left
-			leftBack.set(-0.25);
-			leftFront.set(-0.25);
-			rightBack.set(-0.25);
-			rightFront.set(-0.25);
+			leftBack.set(-0.05);
+			leftFront.set(-0.05);
+			rightBack.set(0.05);
+			rightFront.set(0.05);
 		}
 		else{
 			stop();
@@ -537,20 +551,19 @@ public class Robot extends IterativeRobot{
 	}
 
 	private double getDistance() {
-		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
+		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH );
 	}
 
 
 	private void updateSmartDashboard() {
-		SmartDashboard.putNumber("Right Encoder: ", leftEncoder.get());
-		SmartDashboard.putNumber("Left Encoder: ", rightEncoder.get());
+
 		
 		SmartDashboard.putData("Gyro", gyroscope);
 		SmartDashboard.putNumber("Gyro Angle", gyroscope.getAngle());
 		SmartDashboard.putNumber("Gyro Rate", gyroscope.getRate());
 
-		SmartDashboard.putNumber("Left Encoder Distance", leftEncoder.get());
-		SmartDashboard.putNumber("Right Encoder Distance", rightEncoder.get());
+		SmartDashboard.putNumber("Left Encoder Count", leftEncoder.get());
+		SmartDashboard.putNumber("Right Encoder Count", rightEncoder.get());
 		SmartDashboard.putNumber("Encoder Distance", getDistance());
 	}
 
