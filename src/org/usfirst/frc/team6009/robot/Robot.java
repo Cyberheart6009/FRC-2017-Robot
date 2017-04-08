@@ -151,8 +151,7 @@ public class Robot extends IterativeRobot{
 		System.out.println("Auto selected: " + autoSelected);
 		autoLoopCounter = 0;
 
-		leftEncoder.reset();
-		rightEncoder.reset();
+		resetEncoders();
 		autoStep = Step.STRAIGHT;
 		gyroscope.reset();  // Reset the gyro so current heading is always 0
 		
@@ -176,7 +175,7 @@ public class Robot extends IterativeRobot{
 				driveStraight(0, .4);
 				
 				// Check distance in inches
-				if (distance > 68.5) {
+				if (distance > 66.0) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -285,8 +284,8 @@ public class Robot extends IterativeRobot{
 			break;
 		case centerpeg:
 			double distance = getDistance();
-			driveStraight(0, .3);
-			if (distance > 64.5) {
+			driveStraight(0, .25);
+			if (distance > 78) {
 				stop();
 				autoStep = Step.DONE;
 			}
@@ -347,8 +346,7 @@ public class Robot extends IterativeRobot{
 
 	@Override
 	public void teleopInit(){
-		leftEncoder.reset();
-		rightEncoder.reset();
+		resetEncoders();
 	}
 	
 	/**
@@ -466,6 +464,8 @@ public class Robot extends IterativeRobot{
 		rightBack.set(0);
 		rightFront.set(0);
 	}
+	
+	//slow motor speeds while turning
 	
 	private boolean turnRight(double targetAngle){
 		// We want to turn in place to 60 degrees 
