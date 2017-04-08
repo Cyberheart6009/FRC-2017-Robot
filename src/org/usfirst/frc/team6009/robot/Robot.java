@@ -59,7 +59,7 @@ public class Robot extends IterativeRobot{
 	NetworkTable table;
 
 	double kP = 0.03; // angle multiplied by kP to scale it for the speed of the drive
-	double angle;
+	double angle, distance;
 
 	boolean aButton, bButton, xButton, yButton, startButton, selectButton, upButton, downButton, lbumperButton, rbumperButton;
 	/**
@@ -67,10 +67,6 @@ public class Robot extends IterativeRobot{
 	 * used for any initialization code.
 	 */
 	double centerX = 0;
-	double centerY = 0;
-	double width = 0; 
-	double area = 0;
-	double height = 0;
 
 	// Auto Variables
 	public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE, HANG, DONE };
@@ -134,18 +130,7 @@ public class Robot extends IterativeRobot{
 
 
 		//double centerX = 0;
-		double centerY = 0;
-		double width = 0; 
-		double area = 0;
-		double height = 0;
-
-
-		table.putNumber("CenterX", centerX);
-		table.putNumber("CenterY", centerY);
-		table.putNumber("Width", width);
-		table.putNumber("Area", area);
-		table.putNumber("Height", height);
-		
+		// TODO: Uncomment line below for vision
 		//double centerX = table.getNumber("centerX", 160);
 	}
 
@@ -197,7 +182,6 @@ public class Robot extends IterativeRobot{
 					autoStep = Step.STRAIGHT_PAUSE;
 				}
 				break;
-// TODO: Fix the turning commands for the right peg
 			case STRAIGHT_PAUSE:
 				if ((System.currentTimeMillis() - timerStart) > 500) {
 					autoStep = Step.TURN;
@@ -213,21 +197,10 @@ public class Robot extends IterativeRobot{
 					}
 				}
 				else{
-					turnLeft();
+					turnLeft(-60);
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.TURN_PAUSE;
 				}
-
-				// Check the gyro angle and stop short because overshoot
-				/*
-				if (distance > 35.0) {
-					leftBack.set(0);
-					leftFront.set(0);
-					rightBack.set(0);
-					rightFront.set(0);
-					timerStart = System.currentTimeMillis();
-					autoStep = Step.TURN_PAUSE;
-				}*/
 				break;
 
 			case TURN_PAUSE:
@@ -239,12 +212,12 @@ public class Robot extends IterativeRobot{
 
 			case HANG:
 				if (autoSelected == altRightPeg) {
-					driveStraight(-60, .4);
+					driveStraight(-60, .3);
 				} else {
-					driveStraight(60, .4);
+					driveStraight(60, .3);
 				}
 
-				if (distance > 81) {
+				if (distance > 64.5) {
 					stop();
 					autoStep = Step.DONE;
 				}
@@ -261,17 +234,7 @@ public class Robot extends IterativeRobot{
 
 		// This is where the autonomous code goes. Setup switch cases to choose between the modes using smartdashboard
 
-		double centerX = 0;
-		double centerY = 0;
-		double width = 0; 
-		double area = 0;
-		double height = 0;
-
-		table.putNumber("CenterX", centerX);
-		table.putNumber("CenterY", centerY);
-		table.putNumber("Width", width);
-		table.putNumber("Area", area);
-		table.putNumber("Height", height);
+		//double centerX = 0;
 
 
 		switch(autoSelected){
@@ -321,26 +284,11 @@ public class Robot extends IterativeRobot{
 			}
 			break;
 		case centerpeg:
-			if (autoLoopCounter < 22000){
-				leftBack.set(0.4);
-				rightFront.set(0.4);
-				//climber.set(-1.0);
-				autoLoopCounter++;
-			}
-			/*else if (autoLoopCounter < 80000){
-				leftBack.set(0.0);
-				rightFront.set(0.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 107000){
-				leftBack.set(-0.4);
-				rightFront.set(0.4);
-				autoLoopCounter++;
-			}*/
-			else{
-				leftBack.set(0.0);
-				rightFront.set(0.0);
-
+			double distance = getDistance();
+			driveStraight(0, .3);
+			if (distance > 64.5) {
+				stop();
+				autoStep = Step.DONE;
 			}
 			break;
 		case followtape:
@@ -369,7 +317,7 @@ public class Robot extends IterativeRobot{
 			}
 			break;
 		case vision:
-			double distance = getDistance();
+			distance = getDistance();
 			driveStraight(0, 0.3);
 			if (distance > 100.0 ){
 				stop();
@@ -396,14 +344,16 @@ public class Robot extends IterativeRobot{
 		leftEncoder.reset();
 		rightEncoder.reset();
 	}
-	/**
-	 * This function is called periodically during operator control
-	 */
+
 	@Override
 	public void teleopInit(){
 		leftEncoder.reset();
 		rightEncoder.reset();
 	}
+	
+	/**
+	 * This function is called periodically during operator control
+	 */	
 	public void teleopPeriodic() {
 		// The teleopPeriodic routine is called every ~20ms
 		
@@ -419,12 +369,6 @@ public class Robot extends IterativeRobot{
 		lbumperButton = driver.getRawButton(5);
 		rbumperButton = driver.getRawButton(6);
 
-		table.putNumber("CenterX", centerX);
-		table.putNumber("CenterY", centerY);
-		table.putNumber("Width", width);
-		table.putNumber("Area", area);
-		table.putNumber("Height", height);
-		table.putNumber("x_value", x);
 
 		// Loop that is called while teleop is running
 		// Use this to setup drive style (Ex. Tank/Arcade/etc)
@@ -451,14 +395,16 @@ public class Robot extends IterativeRobot{
 			//Backwards Driving
 			chassis.arcadeDrive(driver.getRawAxis(4), -(driver.getRawAxis(5)));
 		}
+		
+	// TODO: Remove light if we're not using the circuit
 
-
+/*
 		if (aButton == true){
 			light.set(true);
 		}
 		else if (bButton == true) {
 			light.set(false);
-		}
+		}*/
 		
 		if (lbumperButton == true){
 			launcher.set(1.0);
@@ -534,7 +480,22 @@ public class Robot extends IterativeRobot{
 		}
 		return false;
 	}
-	private void turnLeft(){
+
+	private boolean turnLeft(double targetAngle){
+		// We want to turn in place to 60 degrees 
+		leftBack.set(-0.05);
+		leftFront.set(-0.05);
+		rightBack.set(0.05);
+		rightFront.set(0.05);
+
+		double currentAngle = gyroscope.getAngle();
+		if (currentAngle >= targetAngle + 5){
+			return true;
+		}
+		return false;
+	}
+	/*
+	private void turnLeft(double targetAngle){
 		// We want to turn in place -60 degrees
 		double currentAngle = gyroscope.getAngle();
 		if (currentAngle >= -55.75){
@@ -548,15 +509,14 @@ public class Robot extends IterativeRobot{
 			stop();
 		}
 			
-	}
+	}*/
 
 	private double getDistance() {
-		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH );
+		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
 	}
 
 
 	private void updateSmartDashboard() {
-
 		
 		SmartDashboard.putData("Gyro", gyroscope);
 		SmartDashboard.putNumber("Gyro Angle", gyroscope.getAngle());
@@ -568,4 +528,3 @@ public class Robot extends IterativeRobot{
 	}
 
 }
-
