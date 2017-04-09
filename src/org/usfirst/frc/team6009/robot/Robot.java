@@ -30,9 +30,7 @@ public class Robot extends IterativeRobot{
 	final static double ENCODER_COUNTS_PER_INCH = 13.1;
 
 	// Define Joysticks, Victors, Limit switches, Etc
-	final String rightpeg = "Right Peg";
 	final String centerpeg = "Center Peg";
-	final String leftpeg = "Left Peg";
 	final String followtape = "Follow tape";
 	final String DriveStraight = "Straight Drive";
 	final String vision = "Vision";
@@ -84,10 +82,8 @@ public class Robot extends IterativeRobot{
 		//light.set(true);
 
 		chooser = new SendableChooser<String>();
-		chooser.addDefault("Right Peg", rightpeg);
 		chooser.addObject("Center Peg", centerpeg);
-		chooser.addObject("Left Peg", leftpeg);
-		chooser.addObject("Follow Tape", followtape);
+		chooser.addObject("Follow Tape(Do)", followtape);
 		chooser.addObject("DriveStraight", DriveStraight);
 		chooser.addObject("Vision", vision);
 		chooser.addObject("Alt Left Peg", altLeftPeg);
@@ -238,50 +234,7 @@ public class Robot extends IterativeRobot{
 
 		switch(autoSelected){
 
-		case leftpeg: //drive straight
-			if (autoLoopCounter < 45000){
-				leftBack.set(0.8);
-				rightBack.set(-0.8);
-				//climber.set(-1.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 50000){
-				leftBack.set(0.0);
-				rightBack.set(0.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 77000){
-				leftBack.set(-0.8);
-				rightBack.set(0.8);
-				autoLoopCounter++;
-			}
-			else{
-				leftBack.set(0.0);
-				rightBack.set(0.0);
-			} break;
-		case rightpeg:
-			if (autoLoopCounter < 45000){
-				leftBack.set(0.8);
-				rightFront.set(0.8);
-				//climber.set(-1.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 50000){
-				leftBack.set(0.0);
-				rightFront.set(0.0);
-				autoLoopCounter++;
-			}
-			else if (autoLoopCounter < 77000){
-				leftBack.set(0.8);
-				rightFront.set(0.8);
-				autoLoopCounter++;
-			}
-			else{
-				leftBack.set(0.0);
-				rightFront.set(0.0);
-
-			}
-			break;
+		
 		case centerpeg:
 			double distance = getDistance();
 			driveStraight(0, .4);
@@ -294,18 +247,18 @@ public class Robot extends IterativeRobot{
 			break;
 
 		case DriveStraight:
-			if (autoLoopCounter < 45000){
+			if (autoLoopCounter < 45){
 				leftBack.set(0.8);
 				rightBack.set(-0.8);
 				//climber.set(-1.0);
 				autoLoopCounter++;
 			}
-			else if (autoLoopCounter < 50000){
+			else if (autoLoopCounter < 50){
 				leftBack.set(0.0);
 				rightBack.set(0.0);
 				autoLoopCounter++;
 			}
-			else if (autoLoopCounter < 77000){
+			else if (autoLoopCounter < 77){
 				leftBack.set(-0.8);
 				rightBack.set(0.8);
 				autoLoopCounter++;
@@ -323,11 +276,7 @@ public class Robot extends IterativeRobot{
 			}
 			break;
 			
-
-
-
 		}
-		
 
 	}
 
