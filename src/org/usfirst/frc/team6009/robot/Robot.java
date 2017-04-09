@@ -175,7 +175,7 @@ public class Robot extends IterativeRobot{
 				driveStraight(0, .4);
 				
 				// Check distance in inches
-				if (distance > 66.0) {
+				if (distance > 72) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -284,8 +284,8 @@ public class Robot extends IterativeRobot{
 			break;
 		case centerpeg:
 			double distance = getDistance();
-			driveStraight(0, .25);
-			if (distance > 78) {
+			driveStraight(0, .4);
+			if (distance > 71) {
 				stop();
 				autoStep = Step.DONE;
 			}
@@ -396,13 +396,21 @@ public class Robot extends IterativeRobot{
 		
 	// TODO: Remove light if we're not using the circuit
 
-/*
+
 		if (aButton == true){
-			light.set(true);
+			leftBack.set(0.2);
+			leftFront.set(0.2);
+			rightBack.set(-0.2);
+			rightFront.set(-0.2);
+
 		}
 		else if (bButton == true) {
-			light.set(false);
-		}*/
+			leftBack.set(-0.2);
+			leftFront.set(-0.2);
+			rightBack.set(0.2);
+			rightFront.set(0.2);
+
+		}
 		
 		if (lbumperButton == true){
 			launcher.set(1.0);
