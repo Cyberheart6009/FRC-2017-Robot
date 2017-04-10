@@ -161,7 +161,9 @@ public class Robot extends IterativeRobot{
 
 		updateSmartDashboard();
 
-		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected == altRightPeg) {
+		// FIXME: Joseph: always check strings using the .equals or .equalsIgnoreCase() methods.
+		//        I made the right check match the left check.
+		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected.equalsIgnoreCase(altRightPeg)) {
 
 			// Calculate the distance since the last reset of the encoders
 			double distance = getDistance();
@@ -185,6 +187,9 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case TURN:
+				//FIXME:  Joseph, this statement will not work and should
+				//        be the same comparison as above using the .equalsIgnoreCase() method.
+				
 				if (autoSelected == altLeftPeg){
 					if (turnRight(60)) {
 						timerStart = System.currentTimeMillis();
@@ -192,6 +197,10 @@ public class Robot extends IterativeRobot{
 					}
 				}
 				else{
+					
+					// FIXME: The code is falling through to here and ending the turn right away.
+					//        You could use a System.out.println statement to see which branch
+					//        of the above if/else statement is executing.
 					turnLeft(-60);
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.TURN_PAUSE;
@@ -206,9 +215,13 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case HANG:
+				// FIXME:  Again, use the .equalsIgnoreCase when comparing strings.
 				if (autoSelected == altRightPeg) {
 					driveStraight(-60, .3);
 				} else {
+					// FIXME: Then the code falls through to here and turns very 
+					// quickly to the 60 degree setting, ignoring the input because
+					// the error is too high?
 					driveStraight(60, .3);
 				}
 
@@ -345,7 +358,6 @@ public class Robot extends IterativeRobot{
 		
 	// TODO: Remove light if we're not using the circuit
 
-
 		if (aButton == true){
 			leftBack.set(0.2);
 			leftFront.set(0.2);
@@ -397,6 +409,14 @@ public class Robot extends IterativeRobot{
 		double leftSpeed = speed;
 		double rightSpeed = speed;
 
+		// FIXME: This code can make the robot turn very 
+		//        quickly if it is not pointed close to the
+		//        correct direction.  I bet this is the 
+		//        problem you are experiencing.
+		//        I think if you correct the state machine
+		//        if statements above, you will be able to 
+		//        control the turning speed.
+		
 		// adjust the motor speed based on the compass error
 		if (error < 0) {
 			// turn left
@@ -408,13 +428,14 @@ public class Robot extends IterativeRobot{
 			// Slow down right motors
 			rightSpeed -= error * kP;
 		}
-		
+	
 		// set the motors based on the inputted speed
 		leftBack.set(leftSpeed);
 		leftFront.set(leftSpeed);
 		rightBack.set(rightSpeed);
 		rightFront.set(rightSpeed);
 	}
+	
 	private void stop(){
 		leftBack.set(0);
 		leftFront.set(0);
