@@ -190,7 +190,7 @@ public class Robot extends IterativeRobot{
 				//FIXME:  Joseph, this statement will not work and should
 				//        be the same comparison as above using the .equalsIgnoreCase() method.
 				
-				if (autoSelected == altLeftPeg){
+				if (autoSelected.equalsIgnoreCase(altLeftPeg)){
 					if (turnRight(60)) {
 						timerStart = System.currentTimeMillis();
 						autoStep = Step.TURN_PAUSE;
@@ -216,7 +216,7 @@ public class Robot extends IterativeRobot{
 
 			case HANG:
 				// FIXME:  Again, use the .equalsIgnoreCase when comparing strings.
-				if (autoSelected == altRightPeg) {
+				if (autoSelected.equalsIgnoreCase(altRightPeg)) {
 					driveStraight(-60, .3);
 				} else {
 					// FIXME: Then the code falls through to here and turns very 
@@ -472,22 +472,6 @@ public class Robot extends IterativeRobot{
 		}
 		return false;
 	}
-	/*
-	private void turnLeft(double targetAngle){
-		// We want to turn in place -60 degrees
-		double currentAngle = gyroscope.getAngle();
-		if (currentAngle >= -55.75){
-			//Turn left
-			leftBack.set(-0.05);
-			leftFront.set(-0.05);
-			rightBack.set(0.05);
-			rightFront.set(0.05);
-		}
-		else{
-			stop();
-		}
-			
-	}*/
 
 	private double getDistance() {
 		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
