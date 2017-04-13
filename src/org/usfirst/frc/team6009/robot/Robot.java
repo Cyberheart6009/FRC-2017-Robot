@@ -57,14 +57,14 @@ public class Robot extends IterativeRobot{
 	NetworkTable table;
 
 	double kP = 0.03; // angle multiplied by kP to scale it for the speed of the drive
-	double angle, distance;
+	double centerX, offset = 0;
 
 	boolean aButton, bButton, xButton, yButton, startButton, selectButton, upButton, downButton, lbumperButton, rbumperButton;
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
-	double centerX = 0;
+	double degreesperpixel = 0.1625;
 
 	// Auto Variables
 	public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE, HANG, DONE };
@@ -161,8 +161,111 @@ public class Robot extends IterativeRobot{
 
 		updateSmartDashboard();
 
-		// FIXME: Joseph: always check strings using the .equals or .equalsIgnoreCase() methods.
-		//        I made the right check match the left check.
+		if (autoSelected.equalsIgnoreCase(altLeftPeg)){
+			double distance = getDistance();
+			switch (autoStep) {
+			case STRAIGHT:
+				// call driveStraight(heading, speed)
+				driveStraight(0, .4);
+				
+				// Check distance in inches
+				if (distance > 72) {
+					stop();
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.STRAIGHT_PAUSE;
+				}
+				break;
+			case STRAIGHT_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 250) {
+					autoStep = Step.TURN;
+				}
+				System.out.println(autoStep);
+				break;
+
+			case TURN:
+				if (turnRight(60)) {
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.TURN_PAUSE;
+					System.out.println("LEFT PEG");
+				}
+				break;
+
+			case TURN_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.HANG;
+					resetEncoders();
+				}
+				break;
+
+			case HANG:
+				driveStraight(60, .3);
+
+				if (distance > 64.5) {
+					stop();
+					autoStep = Step.DONE;
+				}
+				break;
+
+			case DONE:
+				break;
+			}
+
+			return;
+		}
+		
+		if (autoSelected.equalsIgnoreCase(altRightPeg)){
+			double distance = getDistance();
+			switch (autoStep) {
+			case STRAIGHT:
+				// call driveStraight(heading, speed)
+				driveStraight(0, .4);
+				
+				// Check distance in inches
+				if (distance > 72) {
+					stop();
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.STRAIGHT_PAUSE;
+				}
+				break;
+			case STRAIGHT_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 250) {
+					autoStep = Step.TURN;
+				}
+				System.out.println(autoStep);
+				break;
+
+			case TURN:
+				if (turnLeft(-60)) {
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.TURN_PAUSE;
+					System.out.println("LEFT PEG");
+				}
+				break;
+
+			case TURN_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.HANG;
+					resetEncoders();
+				}
+				break;
+
+			case HANG:
+				driveStraight(-60, .3);
+
+				if (distance > 64.5) {
+					stop();
+					autoStep = Step.DONE;
+				}
+				break;
+
+			case DONE:
+				break;
+			}
+
+			return;
+		}
+			
+		/*
 		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected.equalsIgnoreCase(altRightPeg)) {
 
 			// Calculate the distance since the last reset of the encoders
@@ -194,6 +297,15 @@ public class Robot extends IterativeRobot{
 					if (turnRight(60)) {
 						timerStart = System.currentTimeMillis();
 						autoStep = Step.TURN_PAUSE;
+						System.out.println("LEFT PEG");
+					}
+				}
+				
+				else if (autoSelected.equalsIgnoreCase(altRightPeg)){
+					if (turnLeft(-60)) {
+						timerStart = System.currentTimeMillis();
+						autoStep = Step.TURN_PAUSE;
+						System.out.println("RIGHT PEG");
 					}
 				}
 				else{
@@ -204,6 +316,7 @@ public class Robot extends IterativeRobot{
 					turnLeft(-60);
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.TURN_PAUSE;
+					System.out.println("RIGHT PEG");
 				}
 				break;
 
@@ -236,7 +349,7 @@ public class Robot extends IterativeRobot{
 			}
 
 			return;
-		}
+		}*/
 
 		// If not the altLeftPeg or altRightPeg, then keep the code the same as before.
 
@@ -357,7 +470,7 @@ public class Robot extends IterativeRobot{
 		}
 		
 	// TODO: Remove light if we're not using the circuit
-
+/*
 		if (aButton == true){
 			leftBack.set(0.2);
 			leftFront.set(0.2);
@@ -375,7 +488,7 @@ public class Robot extends IterativeRobot{
 		
 		if (lbumperButton == true){
 			launcher.set(1.0);
-		}
+		}*/
 		else if (rbumperButton == true){
 			climber.set(-1.0);
 			//Timer.delay(0.5);
@@ -396,10 +509,42 @@ public class Robot extends IterativeRobot{
 	public void testPeriodic() {
 		updateSmartDashboard();
 	}
-
-
-	private void driveStraight(double heading, double speed) {
+/*
+	private void visionDrive(double speed){
+		double currentAngle = gyroscope.getAngle()%360.0;
+		double centerX = table.getNumber("centerX", 160);
 		
+		double offset = (160 - centerX) * degreesperpixel;	// If peg is to the right then this value will
+															// equal a negative number
+		double heading = currentAngle - offset;
+		
+		double error = heading - currentAngle;
+
+		// calculate the speed for the motors
+		double leftSpeed = speed;
+		double rightSpeed = speed;
+		
+		// adjust the motor speed based on the compass error
+		if (error < 0) {
+			// turn left
+			// slow down the left motors
+			leftSpeed += error * kP;
+		}
+		else {
+			// turn right
+			// Slow down right motors
+			rightSpeed -= error * kP;
+		}
+	
+		// set the motors based on the inputted speed
+		leftBack.set(leftSpeed);
+		leftFront.set(leftSpeed);
+		rightBack.set(rightSpeed);
+		rightFront.set(rightSpeed);
+		
+	}
+*/
+	private void driveStraight(double heading, double speed) {
 		// get the current heading and calculate a heading error
 		double currentAngle = gyroscope.getAngle()%360.0;
 		
