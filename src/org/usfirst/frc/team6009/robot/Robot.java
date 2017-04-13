@@ -79,8 +79,6 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void robotInit() {
-		//light.set(true);
-
 		chooser = new SendableChooser<String>();
 		chooser.addObject("Center Peg", centerpeg);
 		chooser.addObject("Follow Tape(Do)", followtape);
@@ -91,9 +89,9 @@ public class Robot extends IterativeRobot{
 
 		SmartDashboard.putData("Auto choices", chooser);
 
+		// Drive Train motors
 		leftFront = new Victor(0);
 		leftBack = new Victor(1);
-
 		rightFront = new Victor (2);
 		rightBack = new Victor (3);
 
@@ -105,23 +103,19 @@ public class Robot extends IterativeRobot{
 		rightEncoder = new Encoder(2, 3);
 
 		launcher = new Victor (5);
-		//launcher = new Spark (4); 
 
 		climber = new Victor(6);
 
 		driver = new Joystick (0);
-
 		//operator = new Joystick(1);
-		light = new DigitalOutput(4);
+		
 
 		CameraServer.getInstance().startAutomaticCapture();
-		//server.startAutomaticCapture("cam0");
 
 		chassis = new RobotDrive(leftFront, leftBack, rightFront, rightBack);
 
-		gyroscope = new ADXRS450_Gyro(); 
-		//gyroscope.calibrate();
-
+		gyroscope = new ADXRS450_Gyro();
+		
 		table = NetworkTable.getTable("GRIP/myContoursReport"); // rename - GRIP/myContoursReport 
 
 
@@ -162,17 +156,19 @@ public class Robot extends IterativeRobot{
 		updateSmartDashboard();
 
 		if (autoSelected.equalsIgnoreCase(altLeftPeg)){
+			System.out.println("LEFT PEG");
 			double distance = getDistance();
 			switch (autoStep) {
 			case STRAIGHT:
 				// call driveStraight(heading, speed)
-				driveStraight(0, .4);
-				
+				driveStraight(0, .6);
+				System.out.println(autoStep);
 				// Check distance in inches
-				if (distance > 72) {
+				if (distance > 68) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
+					
 				}
 				break;
 			case STRAIGHT_PAUSE:
@@ -191,14 +187,14 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case TURN_PAUSE:
-				if ((System.currentTimeMillis() - timerStart) > 500) {
+				if ((System.currentTimeMillis() - timerStart) > 250) {
 					autoStep = Step.HANG;
 					resetEncoders();
 				}
 				break;
 
 			case HANG:
-				driveStraight(60, .3);
+				driveStraight(60, .5);
 
 				if (distance > 64.5) {
 					stop();
@@ -210,18 +206,17 @@ public class Robot extends IterativeRobot{
 				break;
 			}
 
-			return;
 		}
 		
-		if (autoSelected.equalsIgnoreCase(altRightPeg)){
+		else if (autoSelected.equalsIgnoreCase(altRightPeg)){
 			double distance = getDistance();
 			switch (autoStep) {
 			case STRAIGHT:
 				// call driveStraight(heading, speed)
-				driveStraight(0, .4);
+				driveStraight(0, .6);
 				
-				// Check distance in inches
-				if (distance > 72) {
+				// Check distance in inches L$ wa here
+				if (distance > 68) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -243,14 +238,14 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case TURN_PAUSE:
-				if ((System.currentTimeMillis() - timerStart) > 500) {
+				if ((System.currentTimeMillis() - timerStart) > 250) {
 					autoStep = Step.HANG;
 					resetEncoders();
 				}
 				break;
 
 			case HANG:
-				driveStraight(-60, .3);
+				driveStraight(-60, .5);
 
 				if (distance > 64.5) {
 					stop();
@@ -264,93 +259,7 @@ public class Robot extends IterativeRobot{
 
 			return;
 		}
-			
-		/*
-		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected.equalsIgnoreCase(altRightPeg)) {
-
-			// Calculate the distance since the last reset of the encoders
-			double distance = getDistance();
-			switch (autoStep) {
-			case STRAIGHT:
-				// call driveStraight(heading, speed)
-				driveStraight(0, .4);
-				
-				// Check distance in inches
-				if (distance > 72) {
-					stop();
-					timerStart = System.currentTimeMillis();
-					autoStep = Step.STRAIGHT_PAUSE;
-				}
-				break;
-			case STRAIGHT_PAUSE:
-				if ((System.currentTimeMillis() - timerStart) > 500) {
-					autoStep = Step.TURN;
-				}
-				System.out.println(autoStep);
-				break;
-
-			case TURN:
-				//FIXME:  Joseph, this statement will not work and should
-				//        be the same comparison as above using the .equalsIgnoreCase() method.
-				
-				if (autoSelected.equalsIgnoreCase(altLeftPeg)){
-					if (turnRight(60)) {
-						timerStart = System.currentTimeMillis();
-						autoStep = Step.TURN_PAUSE;
-						System.out.println("LEFT PEG");
-					}
-				}
-				
-				else if (autoSelected.equalsIgnoreCase(altRightPeg)){
-					if (turnLeft(-60)) {
-						timerStart = System.currentTimeMillis();
-						autoStep = Step.TURN_PAUSE;
-						System.out.println("RIGHT PEG");
-					}
-				}
-				else{
-					
-					// FIXME: The code is falling through to here and ending the turn right away.
-					//        You could use a System.out.println statement to see which branch
-					//        of the above if/else statement is executing.
-					turnLeft(-60);
-					timerStart = System.currentTimeMillis();
-					autoStep = Step.TURN_PAUSE;
-					System.out.println("RIGHT PEG");
-				}
-				break;
-
-			case TURN_PAUSE:
-				if ((System.currentTimeMillis() - timerStart) > 500) {
-					autoStep = Step.HANG;
-					resetEncoders();
-				}
-				break;
-
-			case HANG:
-				// FIXME:  Again, use the .equalsIgnoreCase when comparing strings.
-				if (autoSelected.equalsIgnoreCase(altRightPeg)) {
-					driveStraight(-60, .3);
-				} else {
-					// FIXME: Then the code falls through to here and turns very 
-					// quickly to the 60 degree setting, ignoring the input because
-					// the error is too high?
-					driveStraight(60, .3);
-				}
-
-				if (distance > 64.5) {
-					stop();
-					autoStep = Step.DONE;
-				}
-				break;
-
-			case DONE:
-				break;
-			}
-
-			return;
-		}*/
-
+		
 		// If not the altLeftPeg or altRightPeg, then keep the code the same as before.
 
 		// This is where the autonomous code goes. Setup switch cases to choose between the modes using smartdashboard
@@ -547,7 +456,7 @@ public class Robot extends IterativeRobot{
 	private void driveStraight(double heading, double speed) {
 		// get the current heading and calculate a heading error
 		double currentAngle = gyroscope.getAngle()%360.0;
-		
+		System.out.println("driveStraight");
 		double error = heading - currentAngle;
 
 		// calculate the speed for the motors
@@ -592,13 +501,13 @@ public class Robot extends IterativeRobot{
 	
 	private boolean turnRight(double targetAngle){
 		// We want to turn in place to 60 degrees 
-		leftBack.set(0.05);
-		leftFront.set(0.05);
-		rightBack.set(-0.05);
-		rightFront.set(-0.05);
+		leftBack.set(0.4);
+		leftFront.set(0.4);
+		rightBack.set(-0.4);
+		rightFront.set(-0.4);
 
 		double currentAngle = gyroscope.getAngle();
-		if (currentAngle <= targetAngle - 5){
+		if (currentAngle >= targetAngle - 5){
 			return true;
 		}
 		return false;
@@ -606,13 +515,13 @@ public class Robot extends IterativeRobot{
 
 	private boolean turnLeft(double targetAngle){
 		// We want to turn in place to 60 degrees 
-		leftBack.set(-0.05);
-		leftFront.set(-0.05);
-		rightBack.set(0.05);
-		rightFront.set(0.05);
+		leftBack.set(-0.4);
+		leftFront.set(-0.4);
+		rightBack.set(0.4);
+		rightFront.set(0.4);
 
 		double currentAngle = gyroscope.getAngle();
-		if (currentAngle >= targetAngle + 5){
+		if (currentAngle <= targetAngle + 5){
 			return true;
 		}
 		return false;
