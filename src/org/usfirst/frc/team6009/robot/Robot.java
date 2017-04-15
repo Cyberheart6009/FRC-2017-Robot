@@ -187,8 +187,6 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case TURN:
-				//FIXME:  Joseph, this statement will not work and should
-				//        be the same comparison as above using the .equalsIgnoreCase() method.
 				
 				if (autoSelected == altLeftPeg){
 					if (turnRight(60)) {
@@ -198,9 +196,6 @@ public class Robot extends IterativeRobot{
 				}
 				else{
 					
-					// FIXME: The code is falling through to here and ending the turn right away.
-					//        You could use a System.out.println statement to see which branch
-					//        of the above if/else statement is executing.
 					turnLeft(-60);
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.TURN_PAUSE;
@@ -215,13 +210,10 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case HANG:
-				// FIXME:  Again, use the .equalsIgnoreCase when comparing strings.
+
 				if (autoSelected == altRightPeg) {
 					driveStraight(-60, .3);
 				} else {
-					// FIXME: Then the code falls through to here and turns very 
-					// quickly to the 60 degree setting, ignoring the input because
-					// the error is too high?
 					driveStraight(60, .3);
 				}
 
