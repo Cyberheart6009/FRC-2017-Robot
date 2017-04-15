@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -46,6 +47,9 @@ public class Robot extends IterativeRobot{
 	Joystick driver;
 	//Joystick operator;
 	RobotDrive chassis;
+	
+	// Servos
+	Servo kicker, lifter;
 
 	ADXRS450_Gyro gyroscope;
 	CameraServer server;
@@ -99,10 +103,14 @@ public class Robot extends IterativeRobot{
 		rightFront.setInverted(true);
 		rightBack.setInverted(true);
 		
+		// Servos
+		kicker = new Servo(7);
+		lifter = new Servo(8);
+		
 		leftEncoder = new Encoder(0, 1);
 		rightEncoder = new Encoder(2, 3);
 
-		launcher = new Victor (5);
+		//launcher = new Victor (5);
 
 		climber = new Victor(6);
 
@@ -154,7 +162,90 @@ public class Robot extends IterativeRobot{
 	public void autonomousPeriodic() {
 
 		updateSmartDashboard();
+		
+		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected.equalsIgnoreCase(altRightPeg)) {
 
+			// Calculate the distance since the last reset of the encoders
+			double distance = getDistance();
+			switch (autoStep) {
+			case STRAIGHT:
+				// call driveStraight(heading, speed)
+				driveStraight(0, .4);
+				
+				// Check distance in inches
+				if (distance > 72) {
+					stop();
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.STRAIGHT_PAUSE;
+				}
+				break;
+			case STRAIGHT_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.TURN;
+				}
+				System.out.println(autoStep);
+				break;
+
+			case TURN:
+				//FIXME:  Joseph, this statement will not work and should
+				//        be the same comparison as above using the .equalsIgnoreCase() method.
+				
+				if (autoSelected == altLeftPeg){
+					if (turnRight(60)) {
+						timerStart = System.currentTimeMillis();
+						autoStep = Step.TURN_PAUSE;
+					}
+				}
+				else{
+					
+					// FIXME: The code is falling through to here and ending the turn right away.
+					//        You could use a System.out.println statement to see which branch
+					//        of the above if/else statement is executing.
+					turnLeft(-60);
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.TURN_PAUSE;
+				}
+				break;
+
+			case TURN_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.HANG;
+					resetEncoders();
+				}
+				break;
+
+			case HANG:
+				// FIXME:  Again, use the .equalsIgnoreCase when comparing strings.
+				if (autoSelected == altRightPeg) {
+					driveStraight(-60, .3);
+				} else {
+					// FIXME: Then the code falls through to here and turns very 
+					// quickly to the 60 degree setting, ignoring the input because
+					// the error is too high?
+					driveStraight(60, .3);
+				}
+
+				if (distance > 64.5) {
+					stop();
+					autoStep = Step.DONE;
+				}
+				break;
+
+			case DONE:
+				break;
+			}
+
+			return;
+		}
+		
+		
+		//	Above is the McMaster side auto code that we know works
+		//	We're switching back temporarily to ensure side auto works
+		//	
+		//	Below is the 'updated' auto modes
+		//	Turn speed is fixed but tuning is still needed
+		
+/*
 		if (autoSelected.equalsIgnoreCase(altLeftPeg)){
 			System.out.println("LEFT PEG");
 			double distance = getDistance();
@@ -164,7 +255,7 @@ public class Robot extends IterativeRobot{
 				driveStraight(0, .6);
 				System.out.println(autoStep);
 				// Check distance in inches
-				if (distance > 68) {
+				if (distance > 50) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -194,9 +285,9 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case HANG:
-				driveStraight(60, .5);
+				driveStraight(60, .35);
 
-				if (distance > 64.5) {
+				if (distance > 59) {
 					stop();
 					autoStep = Step.DONE;
 				}
@@ -216,7 +307,7 @@ public class Robot extends IterativeRobot{
 				driveStraight(0, .6);
 				
 				// Check distance in inches L$ wa here
-				if (distance > 68) {
+				if (distance > 50) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -245,9 +336,9 @@ public class Robot extends IterativeRobot{
 				break;
 
 			case HANG:
-				driveStraight(-60, .5);
+				driveStraight(-60, .35);
 
-				if (distance > 64.5) {
+				if (distance > 59) {
 					stop();
 					autoStep = Step.DONE;
 				}
@@ -258,7 +349,7 @@ public class Robot extends IterativeRobot{
 			}
 
 			return;
-		}
+		}*/
 		
 		// If not the altLeftPeg or altRightPeg, then keep the code the same as before.
 
@@ -378,33 +469,39 @@ public class Robot extends IterativeRobot{
 			chassis.arcadeDrive(driver.getRawAxis(4), -(driver.getRawAxis(5)));
 		}
 		
+		
+		
 	// TODO: Remove light if we're not using the circuit
-/*
+
 		if (aButton == true){
-			leftBack.set(0.2);
-			leftFront.set(0.2);
-			rightBack.set(-0.2);
-			rightFront.set(-0.2);
+			double lifterAngle = lifter.getAngle();
+			lifter.setAngle(lifterAngle + 4);
+			//lifter.setAngle(-45);
 
 		}
 		else if (bButton == true) {
-			leftBack.set(-0.2);
-			leftFront.set(-0.2);
-			rightBack.set(0.2);
-			rightFront.set(0.2);
-
+			double lifterAngle = lifter.getAngle();
+			lifter.setAngle(lifterAngle - 4);
+			//lifter.setAngle(0);
 		}
+		/*
+		if (xButton == true){
+			lifter.setAngle(60);
+		}
+		else if (yButton == true){
+			lifter.setAngle(0);
+		}*/
 		
 		if (lbumperButton == true){
 			launcher.set(1.0);
-		}*/
+		}
 		else if (rbumperButton == true){
 			climber.set(-1.0);
 			//Timer.delay(0.5);
 		}
 		else {
 			climber.set(0.0);
-			launcher.set(0.0);
+			//launcher.set(0.0);
 		}
 
 		
@@ -501,13 +598,13 @@ public class Robot extends IterativeRobot{
 	
 	private boolean turnRight(double targetAngle){
 		// We want to turn in place to 60 degrees 
-		leftBack.set(0.4);
-		leftFront.set(0.4);
-		rightBack.set(-0.4);
-		rightFront.set(-0.4);
+		leftBack.set(0.35);
+		leftFront.set(0.35);
+		rightBack.set(-0.35);
+		rightFront.set(-0.35);
 
 		double currentAngle = gyroscope.getAngle();
-		if (currentAngle >= targetAngle - 5){
+		if (currentAngle >= targetAngle - 10){
 			return true;
 		}
 		return false;
@@ -515,13 +612,13 @@ public class Robot extends IterativeRobot{
 
 	private boolean turnLeft(double targetAngle){
 		// We want to turn in place to 60 degrees 
-		leftBack.set(-0.4);
-		leftFront.set(-0.4);
-		rightBack.set(0.4);
-		rightFront.set(0.4);
+		leftBack.set(-0.35);
+		leftFront.set(-0.35);
+		rightBack.set(0.35);
+		rightFront.set(0.35);
 
 		double currentAngle = gyroscope.getAngle();
-		if (currentAngle <= targetAngle + 5){
+		if (currentAngle <= targetAngle + 10){
 			return true;
 		}
 		return false;
