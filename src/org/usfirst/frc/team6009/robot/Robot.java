@@ -1,14 +1,12 @@
-// _______ Drive Style
+// _______ Drive Style		2017 Robot
 package org.usfirst.frc.team6009.robot;
 
+//This is where all the libraries will get imported
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-//import edu.wpi.first.wpilibj.vision.VisionRunner;
-//import edu.wpi.first.wpilibj.vision.VisionThread;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
-//This is where all the libraries will get imported
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
@@ -45,7 +43,6 @@ public class Robot extends IterativeRobot{
 	Encoder leftEncoder, rightEncoder;
 	
 	Joystick driver;
-	//Joystick operator;
 	RobotDrive chassis;
 	
 	// Servos
@@ -87,7 +84,7 @@ public class Robot extends IterativeRobot{
 		chooser.addObject("Center Peg", centerpeg);
 		chooser.addObject("Follow Tape(Do)", followtape);
 		chooser.addObject("DriveStraight", DriveStraight);
-		chooser.addObject("Vision", vision);
+		chooser.addObject("Vision (Actually Vision)", vision);
 		chooser.addObject("Alt Left Peg", altLeftPeg);
 		chooser.addObject("Alt Right Peg", altRightPeg);
 
@@ -386,12 +383,33 @@ public class Robot extends IterativeRobot{
 				rightBack.set(0.0);
 			}
 			break;
+			
 		case vision:
+			double DriveAngle;
+			boolean vision_drive = false;
+			// Drive Straight if no vision target is found, or adjust to follow vision target
+			// driveStraight(heading, speed);
 			distance = getDistance();
-			driveStraight(0, 0.3);
-			if (distance > 100.0 ){
+			if (distance > 500.0 ){
 				stop();
 			}
+			
+			else if (visionAngle() == 0 && vision_drive == true){
+				DriveAngle = gyroscope.getAngle()%360;
+				vision_drive = false;
+				driveStraight(DriveAngle, 0.1);
+			}
+			else if (visionAngle() == 0 && vision_drive == false){
+				// Do nothing (below does the same thing)
+				//DriveAngle = DriveAngle;
+			}
+			else{ 		// AKA if visionAngle() != 0
+				DriveAngle = visionAngle();
+				driveStraight(DriveAngle, 0.1);
+			}
+			
+			//FIXME: may not work all the time when there is no vision input
+			
 			break;
 			
 		}
@@ -485,7 +503,7 @@ public class Robot extends IterativeRobot{
 		}*/
 		
 		if (lbumperButton == true){
-			launcher.set(1.0);
+			//launcher.set(1.0);
 		}
 		else if (rbumperButton == true){
 			climber.set(-1.0);
@@ -620,6 +638,51 @@ public class Robot extends IterativeRobot{
 		return ((double)(leftEncoder.get() + rightEncoder.get())) / (ENCODER_COUNTS_PER_INCH * 2);
 	}
 
+	private double visionAngle(){
+		double[] defaultValue = new double[0];
+		double xTotal = 0;
+		
+		// Grabs data from GRIP through network tables and adds it to array
+		double[] xValues = table.getNumberArray("centerX", defaultValue);
+		
+		// prints only the first number in the GRIP array
+		System.out.println("First X Value: " + xValues[0]);
+		
+		// Prints all values in the array
+		System.out.print("X Values Found: ");
+		for (double xval : xValues){
+			System.out.print(xval + " ");
+		}
+		System.out.println();
+		
+		
+		//		CALCULATE ANGLE TO TURN BASED ON THE POSITION OF THE TARGET
+		// 		Attempt 1: Average x values to find the center of the values
+		
+		// check how many x values were found
+		int xArrayLength = xValues.length;
+		
+		// If more than 1 value then continue with angle calculation
+		if (xArrayLength > 0){
+			// First Average Values
+			for (double xval : xValues){
+				xTotal += xval;
+			}
+			double xAverage = (xTotal/xArrayLength);
+			
+			// below calculates offset to center using camera width (480px)
+			// if > 0: turn right, if < 0 : turn left
+			double degreeOffset = (240 - xAverage * degreesperpixel);	
+			// Get angle the robot is at now
+			double currentAngle = gyroscope.getAngle() %360;
+			
+			return degreeOffset;	
+		}
+		// If no values are found and the array is empty, then return 0
+		else{
+			return 0;
+		}
+	}
 
 	private void updateSmartDashboard() {
 		
