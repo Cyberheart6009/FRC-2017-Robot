@@ -404,7 +404,7 @@ public class Robot extends IterativeRobot{
 				//DriveAngle = DriveAngle;
 			}
 			else{ 		// AKA if visionAngle() != 0
-				DriveAngle = visionAngle();
+				DriveAngle = gyroscope.getAngle() + visionAngle();
 				driveStraight(DriveAngle, 0.1);
 			}
 			
