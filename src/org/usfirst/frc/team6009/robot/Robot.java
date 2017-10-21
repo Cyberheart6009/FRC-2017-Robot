@@ -683,6 +683,7 @@ public class Robot extends IterativeRobot{
 		}
 		// If no values are found and the array is empty, then return 0
 		else{
+			System.out.println("Empty Array length: " + xArrayLength);
 			return 0;
 		}
 	}
