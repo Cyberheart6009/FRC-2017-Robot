@@ -385,10 +385,11 @@ public class Robot extends IterativeRobot{
 			break;
 			
 		case vision:
-			double DriveAngle;
+			double DriveAngle = gyroscope.getAngle()%360;
 			boolean vision_drive = false;
 			// Drive Straight if no vision target is found, or adjust to follow vision target
 			// driveStraight(heading, speed);
+			System.out.println(visionAngle());
 			distance = getDistance();
 			if (distance > 500.0 ){
 				stop();
@@ -398,14 +399,15 @@ public class Robot extends IterativeRobot{
 				DriveAngle = gyroscope.getAngle()%360;
 				vision_drive = false;
 				driveStraight(DriveAngle, 0.1);
+				System.out.println(DriveAngle);
 			}
 			else if (visionAngle() == 0 && vision_drive == false){
 				// Do nothing (below does the same thing)
-				//DriveAngle = DriveAngle;
 			}
 			else{ 		// AKA if visionAngle() != 0
 				DriveAngle = gyroscope.getAngle() + visionAngle();
 				driveStraight(DriveAngle, 0.1);
+				System.out.println("Drive Angle = " + DriveAngle);
 			}
 			
 			//FIXME: may not work all the time when there is no vision input
@@ -645,15 +647,16 @@ public class Robot extends IterativeRobot{
 		// Grabs data from GRIP through network tables and adds it to array
 		double[] xValues = table.getNumberArray("centerX", defaultValue);
 		
-		// prints only the first number in the GRIP array
-		System.out.println("First X Value: " + xValues[0]);
+		//			 prints only the first number in the GRIP array
+		//System.out.println("First X Value: " + xValues[0]);
 		
-		// Prints all values in the array
+		// 			 Prints all values in the array
+		/*
 		System.out.print("X Values Found: ");
 		for (double xval : xValues){
 			System.out.print(xval + " ");
 		}
-		System.out.println();
+		System.out.println();*/
 		
 		
 		//		CALCULATE ANGLE TO TURN BASED ON THE POSITION OF THE TARGET
@@ -669,10 +672,10 @@ public class Robot extends IterativeRobot{
 				xTotal += xval;
 			}
 			double xAverage = (xTotal/xArrayLength);
-			
+			System.out.println("Average Values: " + xAverage);
 			// below calculates offset to center using camera width (480px)
 			// if > 0: turn right, if < 0 : turn left
-			double degreeOffset = (240 - xAverage * degreesperpixel);	
+			double degreeOffset = ((240 - xAverage) * degreesperpixel);	
 			// Get angle the robot is at now
 			double currentAngle = gyroscope.getAngle() %360;
 			
