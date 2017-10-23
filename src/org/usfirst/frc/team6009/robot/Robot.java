@@ -35,6 +35,8 @@ public class Robot extends IterativeRobot{
 	final String vision = "Vision";
 	final String altLeftPeg = "Alt Left Peg";
 	final String altRightPeg = "Alt Right Peg";
+	final String VisionLeftPeg = "Vision Left Peg";
+	final String VisionRightPeg = "Vision Right Peg";
 	String autoSelected;
 	SendableChooser<String> chooser;
 
@@ -68,7 +70,7 @@ public class Robot extends IterativeRobot{
 	double degreesperpixel = 0.1625;
 
 	// Auto Variables
-	public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE, HANG, DONE };
+	public enum Step { STRAIGHT, STRAIGHT_PAUSE, TURN, TURN_PAUSE,VISION_ALIGN, HANG, VISION_HANG, DONE };
 	public Step autoStep = Step.STRAIGHT;
 	public long timerStart;
 
@@ -87,6 +89,8 @@ public class Robot extends IterativeRobot{
 		chooser.addObject("Vision (Actually Vision)", vision);
 		chooser.addObject("Alt Left Peg", altLeftPeg);
 		chooser.addObject("Alt Right Peg", altRightPeg);
+		chooser.addObject("Vision Left Peg", VisionLeftPeg);
+		chooser.addObject("Vision Right Peg", VisionRightPeg);
 
 		SmartDashboard.putData("Auto choices", chooser);
 
@@ -170,7 +174,7 @@ public class Robot extends IterativeRobot{
 				driveStraight(0, .4);
 				
 				// Check distance in inches
-				if (distance > 72) {
+				if (distance > 70) {
 					stop();
 					timerStart = System.currentTimeMillis();
 					autoStep = Step.STRAIGHT_PAUSE;
@@ -220,6 +224,106 @@ public class Robot extends IterativeRobot{
 				}
 				break;
 
+			case DONE:
+				break;
+			}
+
+			return;
+		}
+		
+		if (autoSelected.equalsIgnoreCase(VisionLeftPeg) || autoSelected.equalsIgnoreCase(VisionRightPeg)) {
+			// Calculate the distance since the last reset of the encoders
+			double distance = getDistance();
+			switch (autoStep) {
+			case STRAIGHT:
+				// call driveStraight(heading, speed)
+				driveStraight(0, .4);
+				
+				// Check distance in inches
+				if (distance > 70) {
+					stop();
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.STRAIGHT_PAUSE;
+				}
+				break;
+			case STRAIGHT_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.TURN;
+				}
+				System.out.println(autoStep);
+				break;
+
+			case TURN:
+				
+				if (autoSelected == VisionLeftPeg){
+					if (turnRight(60)) {
+						timerStart = System.currentTimeMillis();
+						autoStep = Step.TURN_PAUSE;
+					}
+				}
+				// If its VisionRightPeg
+				else{
+					
+					turnLeft(-60);
+					timerStart = System.currentTimeMillis();
+					autoStep = Step.TURN_PAUSE;
+				}
+				break;
+
+			case TURN_PAUSE:
+				if ((System.currentTimeMillis() - timerStart) > 500) {
+					autoStep = Step.VISION_ALIGN;
+					resetEncoders();
+				}
+				break;
+				
+			case VISION_ALIGN:
+				//code
+				double vision_offset = visionAngle();
+				System.out.println("OFFSET = " + vision_offset);
+				if (vision_offset > 0){
+					// turn right
+					turnRight(gyroscope.getAngle() + vision_offset);
+					autoStep = Step.VISION_HANG;
+				}
+				else if (vision_offset < 0){
+					// turn left
+					turnLeft(gyroscope.getAngle() + vision_offset);
+					autoStep = Step.VISION_HANG;
+				}
+				else{
+					// if it is dead on
+					autoStep = Step.HANG;
+				}
+				resetEncoders();
+				break;
+				
+			case HANG:
+				vision_offset = gyroscope.getAngle();
+				if (autoSelected == VisionRightPeg) {
+					driveStraight(vision_offset, .3);
+				} else {
+					driveStraight(vision_offset, .3);
+				}
+
+				if (distance > 64.5) {
+					stop();
+					autoStep = Step.DONE;
+				}
+				break;
+				
+			case VISION_HANG:
+				// drive straight
+				double target_angle = gyroscope.getAngle();
+				driveStraight(target_angle, 0.3);
+				
+				if (distance > 64.5){
+					stop();
+					autoStep = Step.DONE;
+				}
+				
+				break;
+				
 			case DONE:
 				break;
 			}
@@ -460,7 +564,7 @@ public class Robot extends IterativeRobot{
 		// Use this to map button inputs to motors, etc
 
 		
-		//chassis.arcadeDrive((-driver.getY()), (-driver.getX()));		
+		//chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
 
 		selectButton = driver.getRawButton(7);
 		startButton = driver.getRawButton(8);
@@ -515,11 +619,7 @@ public class Robot extends IterativeRobot{
 			climber.set(0.0);
 			//launcher.set(0.0);
 		}
-
-		
-
 	}
-
 
 	/**
 	 * This function is called periodically during test mode
