@@ -26,9 +26,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot{
 
+	// Constant defining encoder turns per inch of robot travel
 	final static double ENCODER_COUNTS_PER_INCH = 13.1;
 
 	// Define Joysticks, Victors, Limit switches, Etc
+	
 	final String centerpeg = "Center Peg";
 	final String followtape = "Follow tape";
 	final String DriveStraight = "Straight Drive";
@@ -44,7 +46,10 @@ public class Robot extends IterativeRobot{
 	SpeedController leftFront, leftBack, rightFront, rightBack, hopper, climber, launcher;
 	Encoder leftEncoder, rightEncoder;
 	
+	// Driver Joystick
 	Joystick driver;
+	
+	// RobotDrive Object
 	RobotDrive chassis;
 	
 	// Servos
@@ -100,7 +105,9 @@ public class Robot extends IterativeRobot{
 		rightFront = new Victor (2);
 		rightBack = new Victor (3);
 
-		// The right side motors are inverted
+		// The right side motors are inverted			We did this due to the motors facing the opposite way
+		//												In real life, this prevents us from always having to put
+		//												A negative value in for the speed in order to drive forward
 		rightFront.setInverted(true);
 		rightBack.setInverted(true);
 		
