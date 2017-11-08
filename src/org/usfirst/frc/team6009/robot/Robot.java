@@ -72,6 +72,8 @@ public class Robot extends IterativeRobot{
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
+	
+	// Constant used for calculating degrees to turn for vision
 	double degreesperpixel = 0.1625;
 
 	// Auto Variables
@@ -99,7 +101,7 @@ public class Robot extends IterativeRobot{
 
 		SmartDashboard.putData("Auto choices", chooser);
 
-		// Drive Train motors
+		// Drive Train motors			We are assigning the motors to the motor controllers *Called Victors*
 		leftFront = new Victor(0);
 		leftBack = new Victor(1);
 		rightFront = new Victor (2);
@@ -111,7 +113,7 @@ public class Robot extends IterativeRobot{
 		rightFront.setInverted(true);
 		rightBack.setInverted(true);
 		
-		// Servos
+		// Servos		Never Actually used
 		kicker = new Servo(7);
 		lifter = new Servo(8);
 		
@@ -125,16 +127,29 @@ public class Robot extends IterativeRobot{
 		driver = new Joystick (0);
 		//operator = new Joystick(1);
 		
-
+		// Starts the default USB camera streaming service
 		CameraServer.getInstance().startAutomaticCapture();
 
+		// Defines our main/ only RobotDrive Object
+		// This is used in the default drive functions that will be seen in the teleop mode
 		chassis = new RobotDrive(leftFront, leftBack, rightFront, rightBack);
-
+		
+		// Defaults gyro
 		gyroscope = new ADXRS450_Gyro();
 		
+		// Network table definition
 		table = NetworkTable.getTable("GRIP/myContoursReport"); // rename - GRIP/myContoursReport 
 
-
+		/*			Network Tables
+		 * Network tables is the method in which we communicate with the RoboRio
+		 * This happens over the local network created by the Radio that connects the Rio with other Devices on the network
+		 * We use this 'table' in particular to communicate with the DS laptop which is processing
+		 * images from the camera and filtering out colors for vision tracking
+		 * 			*Vision is still experimental for us*
+		 */
+		
+		
+		
 		//double centerX = 0;
 		// TODO: Uncomment line below for vision
 		//double centerX = table.getNumber("centerX", 160);
@@ -148,17 +163,17 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void autonomousInit() {
-
 		// Initializes autonomous mode
-		// setup loop variable as well as the smartdashboard
+		
+		// setup loop variable as well as the smartdashboard				- Very old
 
 		autoSelected = (String) chooser.getSelected();
 		//autoSelected = SmartDashboard.getString("Auto Selector", defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
 		autoLoopCounter = 0;
 
-		resetEncoders();
-		autoStep = Step.STRAIGHT;
+		resetEncoders(); 	// Homemade function which we will explore later
+		autoStep = Step.STRAIGHT;				// Probably redundant since it is defined above
 		gyroscope.reset();  // Reset the gyro so current heading is always 0
 		
 	}
@@ -168,9 +183,11 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void autonomousPeriodic() {
-
+		
+		// Another homemade function that pushed data gathered and displays it on smartdashboard on the DS
 		updateSmartDashboard();
 		
+		// Setup this so that we could preserve our other auto modes
 		if (autoSelected.equalsIgnoreCase(altLeftPeg) || autoSelected.equalsIgnoreCase(altRightPeg)) {
 
 			// Calculate the distance since the last reset of the encoders
@@ -458,9 +475,10 @@ public class Robot extends IterativeRobot{
 		//double centerX = 0;
 
 
+		// Original Auto modes, Some from before we had encoders
 		switch(autoSelected){
 
-		
+		// Updated to use encoders
 		case centerpeg:
 			double distance = getDistance();
 			driveStraight(0, .4);
@@ -469,9 +487,11 @@ public class Robot extends IterativeRobot{
 				autoStep = Step.DONE;
 			}
 			break;
+			
 		case followtape:
 			break;
 
+			// First Auto mode we used, 
 		case DriveStraight:
 			if (autoLoopCounter < 45){
 				leftBack.set(0.8);
@@ -495,6 +515,10 @@ public class Robot extends IterativeRobot{
 			}
 			break;
 			
+			
+		// Experimental mode to test if vision is even possible with current resources
+		// Supposed to towards a piece of tape but ends up just turning in place
+						// when we demo think of how we can fix this
 		case vision:
 			double DriveAngle = gyroscope.getAngle()%360;
 			boolean vision_drive = false;
@@ -522,6 +546,8 @@ public class Robot extends IterativeRobot{
 			}
 			
 			//FIXME: may not work all the time when there is no vision input
+			// ^ Actually fixed but this is a good example of how to keep track of issues
+			// TODO: is another one of these commands - can see beside scrollbar
 			
 			break;
 			
@@ -534,9 +560,13 @@ public class Robot extends IterativeRobot{
 	 */
 	@Override
 	public void disabledPeriodic() {
+		// This was added in so that we can see encoder and gyro values without the robot being enabled
+		// This is much safer plus very usefull
 		updateSmartDashboard();
 	}
 	
+	// "Homemade" function - uses buit in encoder value reset method
+	// probably the most basic function but easier than writing it everytime
 	private void resetEncoders() {
 		leftEncoder.reset();
 		rightEncoder.reset();
@@ -544,6 +574,7 @@ public class Robot extends IterativeRobot{
 
 	@Override
 	public void teleopInit(){
+		// Simply resets encoders on the start of teleop - tbh its pretty useless since they are not used in teleop
 		resetEncoders();
 	}
 	
@@ -558,6 +589,7 @@ public class Robot extends IterativeRobot{
 		
 		updateSmartDashboard();
 
+		// all Boolean values (True or False) that check to see if the buttons are pressed
 		aButton = driver.getRawButton(1);
 		bButton = driver.getRawButton(2);
 		xButton = driver.getRawButton(3);
@@ -573,6 +605,9 @@ public class Robot extends IterativeRobot{
 		
 		//chassis.arcadeDrive((-driver.getY()), (-driver.getX()));
 
+		
+		// This next section allows us to use one stick for driving forwards 
+		// and the other stick for driving backwards one a button is pressed to select the mode
 		selectButton = driver.getRawButton(7);
 		startButton = driver.getRawButton(8);
 		
@@ -595,7 +630,7 @@ public class Robot extends IterativeRobot{
 		
 		
 	// TODO: Remove light if we're not using the circuit
-
+		// used to test our active gear slot. basically useless code
 		if (aButton == true){
 			double lifterAngle = lifter.getAngle();
 			lifter.setAngle(lifterAngle + 4);
@@ -615,6 +650,8 @@ public class Robot extends IterativeRobot{
 			lifter.setAngle(0);
 		}*/
 		
+		
+		// Used to turn the climber when the Right Bumper is pressed
 		if (lbumperButton == true){
 			//launcher.set(1.0);
 		}
@@ -634,6 +671,9 @@ public class Robot extends IterativeRobot{
 	public void testPeriodic() {
 		updateSmartDashboard();
 	}
+	
+	// Original VisionDrive wrote during a competition 
+	// Don't think we've even tested this before
 /*
 	private void visionDrive(double speed){
 		double currentAngle = gyroscope.getAngle()%360.0;
@@ -669,6 +709,10 @@ public class Robot extends IterativeRobot{
 		
 	}
 */
+	
+	// 			** MAGIC AREA **		//
+	// This is the function that allows the robot to drive straight no matter what
+	// It automatically corrects itself and stays locked onto the set angle
 	private void driveStraight(double heading, double speed) {
 		// get the current heading and calculate a heading error
 		double currentAngle = gyroscope.getAngle()%360.0;
@@ -795,6 +839,8 @@ public class Robot extends IterativeRobot{
 		}
 	}
 
+	// This is the function that displays the info in smartdashboard 
+	// This is seen on the DS
 	private void updateSmartDashboard() {
 		
 		SmartDashboard.putData("Gyro", gyroscope);
