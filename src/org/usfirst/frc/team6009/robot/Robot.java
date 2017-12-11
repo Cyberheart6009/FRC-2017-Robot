@@ -533,7 +533,7 @@ public class Robot extends IterativeRobot{
 			else if (visionAngle() == 0 && vision_drive == true){
 				DriveAngle = gyroscope.getAngle()%360;
 				vision_drive = false;
-				driveStraight(DriveAngle, 0.1);
+				driveStraight(DriveAngle, 0.2);
 				System.out.println(DriveAngle);
 			}
 			else if (visionAngle() == 0 && vision_drive == false){
@@ -541,7 +541,7 @@ public class Robot extends IterativeRobot{
 			}
 			else{ 		// AKA if visionAngle() != 0
 				DriveAngle = gyroscope.getAngle() + visionAngle();
-				driveStraight(DriveAngle, 0.1);
+				driveStraight(DriveAngle, 0.2);
 				System.out.println("Drive Angle = " + DriveAngle);
 			}
 			
@@ -826,7 +826,7 @@ public class Robot extends IterativeRobot{
 			System.out.println("Average Values: " + xAverage);
 			// below calculates offset to center using camera width (480px)
 			// if > 0: turn right, if < 0 : turn left
-			double degreeOffset = ((240 - xAverage) * degreesperpixel);	
+			double degreeOffset = -(((176/2) - xAverage) * degreesperpixel);	
 			// Get angle the robot is at now
 			double currentAngle = gyroscope.getAngle() %360;
 			
